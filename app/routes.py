@@ -1,10 +1,15 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app import db
 from app.models import Post, Comment
 from datetime import datetime
 
 main_bp = Blueprint('main', __name__)
 blog_bp = Blueprint('blog', __name__, url_prefix='/blog')
+
+# Health Check
+@main_bp.route('/health')
+def health():
+    return jsonify({'status': 'ok', 'message': 'App is running'}), 200
 
 # Home Page
 @main_bp.route('/')
