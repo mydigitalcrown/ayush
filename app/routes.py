@@ -14,40 +14,89 @@ def health():
 # Home Page
 @main_bp.route('/')
 def index():
-    posts = Post.query.order_by(Post.created_at.desc()).all()
-    return render_template('index.html', posts=posts)
+    try:
+        posts = Post.query.order_by(Post.created_at.desc()).all()
+        return render_template('index.html', posts=posts)
+    except Exception as e:
+        # Fallback to JSON if template rendering fails
+        return jsonify({
+            'status': 'ok',
+            'message': 'Personal Portfolio Blog',
+            'posts_count': len(posts) if 'posts' in locals() else 0
+        }), 200
 
 @main_bp.route('/about')
 def about():
-    return render_template('about.html')
+    try:
+        return render_template('about.html')
+    except Exception as e:
+        return jsonify({
+            'name': 'Ayush Pandey',
+            'class': '10th',
+            'school': 'Silver Grove School',
+            'location': 'Varanasi, Uttar Pradesh',
+            'status': 'ok'
+        }), 200
+
+# API endpoint for posts
+@main_bp.route('/api/posts')
+def api_posts():
+    try:
+        posts = Post.query.order_by(Post.created_at.desc()).all()
+        return jsonify({
+            'posts': [
+                {
+                    'id': p.id,
+                    'title': p.title,
+                    'content': p.content[:100],
+                    'author': p.author,
+                    'category': p.category,
+                    'created_at': p.created_at.isoformat()
+                } for p in posts
+            ]
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Blog Routes
 @blog_bp.route('/')
 def list_posts():
-    page = request.args.get('page', 1, type=int)
-    posts = Post.query.order_by(Post.created_at.desc()).paginate(page=page, per_page=10)
-    return render_template('blog/list.html', posts=posts)
+    try:
+        page = request.args.get('page', 1, type=int)
+        posts = Post.query.order_by(Post.created_at.desc()).paginate(page=page, per_page=10)
+        return render_template('blog/list.html', posts=posts)
+    except Exception as e:
+        return jsonify({'error': str(e), 'status': 'error'}), 500
 
 @blog_bp.route('/post/<int:post_id>')
 def view_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    comments = Comment.query.filter_by(post_id=post_id).order_by(Comment.created_at.desc()).all()
-    return render_template('blog/post.html', post=post, comments=comments)
+    try:
+        post = Post.query.get_or_404(post_id)
+        comments = Comment.query.filter_by(post_id=post_id).order_by(Comment.created_at.desc()).all()
+        return render_template('blog/post.html', post=post, comments=comments)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
 
 @blog_bp.route('/post/<int:post_id>/comment', methods=['POST'])
 def add_comment(post_id):
-    post = Post.query.get_or_404(post_id)
+    try:
+        post = Post.query.get_or_404(post_id)
+        
+        author = request.form.get('author', '')
+        email = request.form.get('email', '')
+        content = request.form.get('content', '')
+        
+        if author and email and content:
+            comment = Comment(author=author, email=email, content=content, post_id=post_id)
+            db.session.add(comment)
+            db.session.commit()
+            flash('Comment added successfully!', 'success')
+        else:
+            flash('Please fill in all fields', 'error')
+    except Exception as e:
+        flash(f'Error adding comment: {str(e)}', 'error')
     
-    author = request.form.get('author', '')
-    email = request.form.get('email', '')
-    content = request.form.get('content', '')
-    
-    if author and email and content:
-        comment = Comment(author=author, email=email, content=content, post_id=post_id)
-        db.session.add(comment)
-        db.session.commit()
-        flash('Comment added successfully!', 'success')
-    else:
+    return redirect(url_for('blog.view_post', post_id=post_id))
         flash('All fields are required!', 'error')
     
     return redirect(url_for('blog.view_post', post_id=post_id))
