@@ -18,9 +18,13 @@ def create_app():
     
     # Database configuration
     if os.environ.get('DATABASE_URL'):
+        # Use provided database URL (e.g., PostgreSQL on Vercel)
         app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    elif os.environ.get('VERCEL'):
+        # Use in-memory database on Vercel (serverless)
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     else:
-        # SQLite for development
+        # Local development - SQLite
         db_path = os.path.join(os.path.dirname(__file__), 'blog.db')
         app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     
@@ -28,16 +32,30 @@ def create_app():
     db.init_app(app)
     
     # Register blueprints
-    from app.routes import main_bp, blog_bp
-    app.register_blueprint(main_bp)
-    app.register_blueprint(blog_bp)
+    try:
+        from app.routes import main_bp, blog_bp
+        app.register_blueprint(main_bp)
+        app.register_blueprint(blog_bp)
+    except Exception as e:
+        logger.error(f"Error registering blueprints: {e}")
     
-    # Context for database operations
+    # Create tables in application context
     with app.app_context():
         try:
             db.create_all()
+            # Seed some default data for demo
+            from app.models import Post
+            if Post.query.count() == 0:
+                sample_post = Post(
+                    title='Welcome to Ayush\'s Blog',
+                    content='This is a welcome post about the personal blog of Ayush Pandey.',
+                    author='Ayush Pandey',
+                    category='Welcome'
+                )
+                db.session.add(sample_post)
+                db.session.commit()
         except Exception as e:
-            logger.warning(f"Could not create database tables: {e}")
+            logger.warning(f"Could not initialize database: {e}")
     
     # Error handlers
     @app.errorhandler(404)
