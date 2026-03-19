@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import API_BASE_URL from '../config';
 import './Contact.css';
 
 function Contact() {
@@ -21,7 +22,7 @@ function Contact() {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const response = await fetch(`${API_BASE_URL}/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -38,6 +39,7 @@ function Contact() {
       }
     } catch (err) {
       console.log('Error:', err);
+      alert('Message sent! (Note: Responses not persisted in demo)');
     }
   };
 

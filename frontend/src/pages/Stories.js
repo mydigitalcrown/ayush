@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiCall } from '../config';
 import './Stories.css';
 
 function Stories() {
@@ -6,16 +7,29 @@ function Stories() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/stories')
-      .then(res => res.json())
-      .then(data => {
-        setStories(data);
+    const fetchStories = async () => {
+      try {
+        const data = await apiCall('/api/posts?page=1');
+        setStories(data.posts || []);
         setLoading(false);
-      })
-      .catch(err => {
-        console.log('Error:', err);
+      } catch (error) {
+        console.log('Error fetching stories:', error);
+        // Fallback stories
+        setStories([
+          {
+            id: 1,
+            title: 'Welcome to Ayush\'s Blog',
+            content: 'This is a welcome post about the personal blog of Ayush Pandey.',
+            author: 'Ayush Pandey',
+            category: 'Welcome',
+            created_at: new Date().toISOString()
+          }
+        ]);
         setLoading(false);
-      });
+      }
+    };
+
+    fetchStories();
   }, []);
 
   if (loading) {
@@ -36,9 +50,9 @@ function Stories() {
             <div key={story.id} className="story-card">
               <div className="story-header">
                 <h2>{story.title}</h2>
-                <span className="story-date">{new Date(story.date).toLocaleDateString()}</span>
+                <span className="story-date">{new Date(story.created_at).toLocaleDateString()}</span>
               </div>
-              <p className="story-excerpt">{story.excerpt}</p>
+              <p className="story-excerpt">{story.content.substring(0, 150)}...</p>
               <button className="read-more-btn">Read More →</button>
             </div>
           ))}

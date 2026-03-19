@@ -1,8 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { apiCall } from '../config';
 import './Home.css';
 
 function Home() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const data = await apiCall('/');
+        setPosts(data.posts || []);
+      } catch (error) {
+        console.log('Error fetching posts:', error);
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
   return (
     <div className="home">
       <div className="container">
@@ -42,6 +62,28 @@ function Home() {
             <h3>Singing</h3>
             <p>Music and singing bring joy to my life.</p>
           </div>
+        </div>
+
+        <div className="recent-posts">
+          <h2>Recent Posts</h2>
+          {loading ? (
+            <p>Loading posts...</p>
+          ) : posts.length > 0 ? (
+            <div className="posts-grid">
+              {posts.map(post => (
+                <div key={post.id} className="post-preview">
+                  <h3>{post.title}</h3>
+                  <p className="post-meta">
+                    <span className="author">{post.author}</span>
+                    <span className="category">{post.category}</span>
+                  </p>
+                  <p className="post-date">{new Date(post.created_at).toLocaleDateString()}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>No posts yet. Check back soon!</p>
+          )}
         </div>
       </div>
     </div>

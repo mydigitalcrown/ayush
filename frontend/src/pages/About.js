@@ -1,14 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { apiCall } from '../config';
 import './About.css';
 
 function About() {
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/about')
-      .then(res => res.json())
-      .then(data => setProfile(data))
-      .catch(err => console.log('Error:', err));
+    const fetchProfile = async () => {
+      try {
+        const data = await apiCall('/about');
+        setProfile(data);
+      } catch (error) {
+        console.log('Error fetching profile:', error);
+        // Fallback profile
+        setProfile({
+          name: 'Ayush Pandey',
+          class: '10th',
+          school: 'Silver Grove School',
+          location: 'Varanasi, Uttar Pradesh',
+          hobbies: ['Dance', 'Singing'],
+          talent: 'Writing Stories'
+        });
+      }
+    };
+
+    fetchProfile();
   }, []);
 
   if (!profile) {
@@ -35,7 +51,7 @@ function About() {
             <div className="info-card">
               <h2>My Hobbies</h2>
               <ul className="hobbies-list">
-                {profile.hobbies.map((hobby, idx) => (
+                {profile.hobbies && profile.hobbies.map((hobby, idx) => (
                   <li key={idx}>🎉 {hobby}</li>
                 ))}
               </ul>
