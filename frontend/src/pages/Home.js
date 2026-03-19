@@ -1,27 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { apiCall } from '../config';
+import { blogPosts } from '../config';
 import './Home.css';
 
 function Home() {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const data = await apiCall('/');
-        setPosts(data.posts || []);
-      } catch (error) {
-        console.log('Error fetching posts:', error);
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
+  const recentPosts = blogPosts.slice(0, 3);
 
   return (
     <div className="home">
@@ -39,6 +22,53 @@ function Home() {
               <Link to="/stories" className="btn btn-secondary">Read My Stories</Link>
             </div>
           </div>
+          <div className="hero-image">
+            <div className="avatar">
+              <span>🎓</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="highlights">
+          <div className="highlight-card">
+            <div className="icon">✍️</div>
+            <h3>Storytelling</h3>
+            <p>I love creating engaging stories and sharing them with others.</p>
+          </div>
+          <div className="highlight-card">
+            <div className="icon">💃</div>
+            <h3>Dancing</h3>
+            <p>Dance is my passion and a way to express myself.</p>
+          </div>
+          <div className="highlight-card">
+            <div className="icon">🎤</div>
+            <h3>Singing</h3>
+            <p>Music and singing bring joy to my life.</p>
+          </div>
+        </div>
+
+        <div className="recent-posts">
+          <h2>Recent Stories</h2>
+          <div className="posts-grid">
+            {recentPosts.map(post => (
+              <div key={post.id} className="post-preview">
+                <h3>{post.title}</h3>
+                <p className="post-meta">
+                  <span className="author">{post.author}</span>
+                  <span className="category">{post.category}</span>
+                </p>
+                <p className="post-excerpt">{post.content.substring(0, 100)}...</p>
+                <p className="post-date">{new Date(post.created_at).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Home;
           <div className="hero-image">
             <div className="avatar">
               <span>🎓</span>

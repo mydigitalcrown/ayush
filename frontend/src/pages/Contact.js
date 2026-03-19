@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import API_BASE_URL from '../config';
 import './Contact.css';
 
 function Contact() {
@@ -18,29 +17,20 @@ function Contact() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
-    try {
-      const response = await fetch(`${API_BASE_URL}/contact`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setSubmitted(true);
-        setFormData({ name: '', email: '', message: '' });
-        setTimeout(() => setSubmitted(false), 5000);
-      }
-    } catch (err) {
-      console.log('Error:', err);
-      alert('Message sent! (Note: Responses not persisted in demo)');
-    }
+    // Store in localStorage (for demo purposes)
+    const messages = JSON.parse(localStorage.getItem('messages') || '[]');
+    messages.push({
+      ...formData,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('messages', JSON.stringify(messages));
+    
+    setSubmitted(true);
+    setFormData({ name: '', email: '', message: '' });
+    setTimeout(() => setSubmitted(false), 5000);
   };
 
   return (

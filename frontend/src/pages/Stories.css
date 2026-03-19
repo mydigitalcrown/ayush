@@ -60,18 +60,25 @@
   flex-grow: 1;
 }
 
-.read-more-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 5px;
-  font-weight: 600;
-  transition: transform 0.3s ease;
-  align-self: start;
+.story-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  font-size: 0.85rem;
 }
 
-.read-more-btn:hover {
-  transform: translateX(5px);
+.story-author {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.story-category {
+  background: #f0f0f0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 3px;
+  color: #666;
 }
 
 @media (max-width: 768px) {

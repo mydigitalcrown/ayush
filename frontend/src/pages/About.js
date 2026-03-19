@@ -1,36 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { apiCall } from '../config';
+import React from 'react';
+import { profileData } from '../config';
 import './About.css';
 
 function About() {
-  const [profile, setProfile] = useState(null);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await apiCall('/about');
-        setProfile(data);
-      } catch (error) {
-        console.log('Error fetching profile:', error);
-        // Fallback profile
-        setProfile({
-          name: 'Ayush Pandey',
-          class: '10th',
-          school: 'Silver Grove School',
-          location: 'Varanasi, Uttar Pradesh',
-          hobbies: ['Dance', 'Singing'],
-          talent: 'Writing Stories'
-        });
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  if (!profile) {
-    return <div className="about"><p>Loading...</p></div>;
-  }
-
   return (
     <div className="about">
       <div className="container">
@@ -41,17 +13,17 @@ function About() {
             <div className="info-card">
               <h2>Personal Information</h2>
               <ul>
-                <li><strong>Name:</strong> {profile.name}</li>
-                <li><strong>Grade:</strong> {profile.class}</li>
-                <li><strong>School:</strong> {profile.school}</li>
-                <li><strong>Location:</strong> {profile.location}</li>
+                <li><strong>Name:</strong> {profileData.name}</li>
+                <li><strong>Grade:</strong> {profileData.class}</li>
+                <li><strong>School:</strong> {profileData.school}</li>
+                <li><strong>Location:</strong> {profileData.location}</li>
               </ul>
             </div>
 
             <div className="info-card">
               <h2>My Hobbies</h2>
               <ul className="hobbies-list">
-                {profile.hobbies && profile.hobbies.map((hobby, idx) => (
+                {profileData.hobbies.map((hobby, idx) => (
                   <li key={idx}>🎉 {hobby}</li>
                 ))}
               </ul>
@@ -60,12 +32,17 @@ function About() {
             <div className="info-card">
               <h2>My Talent</h2>
               <p className="talent-text">
-                <strong>✨ {profile.talent}</strong>
+                <strong>✨ {profileData.talent}</strong>
               </p>
               <p>
                 I love creating fictional worlds and stories. Writing helps me express my creativity 
                 and imagination. I enjoy crafting engaging narratives that captivate readers.
               </p>
+            </div>
+
+            <div className="info-card">
+              <h2>About Me</h2>
+              <p>{profileData.about}</p>
             </div>
           </div>
 
