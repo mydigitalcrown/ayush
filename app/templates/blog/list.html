@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Blog - My Blog{% endblock %}
+
+{% block content %}
+<h1>All Blog Posts</h1>
+
+<div class="blog-list">
+    {% if posts.items %}
+        {% for post in posts.items %}
+        <article class="post-item">
+            <h2><a href="{{ url_for('blog.view_post', post_id=post.id) }}">{{ post.title }}</a></h2>
+            <div class="post-meta">
+                <span class="author">By {{ post.author }}</span>
+                <span class="date">{{ post.created_at.strftime('%B %d, %Y') }}</span>
+                <span class="category">{{ post.category }}</span>
+            </div>
+            <p>{{ post.content[:200] }}...</p>
+            <a href="{{ url_for('blog.view_post', post_id=post.id) }}" class="btn-small">Read Full Post</a>
+        </article>
+        {% endfor %}
+    {% else %}
+        <p class="no-posts">No posts found. <a href="{{ url_for('blog.create_post') }}">Create one now!</a></p>
+    {% endif %}
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    {% if posts.has_prev %}
+        <a href="{{ url_for('blog.list_posts', page=posts.prev_num) }}" class="btn-small">← Previous</a>
+    {% endif %}
+    
+    <span>Page {{ posts.page }} of {{ posts.pages }}</span>
+    
+    {% if posts.has_next %}
+        <a href="{{ url_for('blog.list_posts', page=posts.next_num) }}" class="btn-small">Next →</a>
+    {% endif %}
+</div>
+{% endblock %}
