@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, jsonify, request
 from app import db
 from app.models import Post, Comment
 from datetime import datetime
@@ -15,45 +15,54 @@ def health():
 @main_bp.route('/')
 def index():
     try:
-        posts = Post.query.order_by(Post.created_at.desc()).all()
-        return render_template('index.html', posts=posts)
-    except Exception as e:
-        # Fallback to JSON if template rendering fails
+        posts = Post.query.order_by(Post.created_at.desc()).limit(5).all()
         return jsonify({
             'status': 'ok',
-            'message': 'Personal Portfolio Blog',
-            'posts_count': len(posts) if 'posts' in locals() else 0
-        }), 200
-
-@main_bp.route('/about')
-def about():
-    try:
-        return render_template('about.html')
-    except Exception as e:
-        return jsonify({
-            'name': 'Ayush Pandey',
-            'class': '10th',
-            'school': 'Silver Grove School',
-            'location': 'Varanasi, Uttar Pradesh',
-            'status': 'ok'
-        }), 200
-
-# API endpoint for posts
-@main_bp.route('/api/posts')
-def api_posts():
-    try:
-        posts = Post.query.order_by(Post.created_at.desc()).all()
-        return jsonify({
+            'message': 'Welcome to Ayush Pandey\'s Blog',
             'posts': [
                 {
                     'id': p.id,
                     'title': p.title,
-                    'content': p.content[:100],
                     'author': p.author,
                     'category': p.category,
                     'created_at': p.created_at.isoformat()
                 } for p in posts
             ]
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e), 'status': 'error'}), 500
+
+@main_bp.route('/about')
+def about():
+    return jsonify({
+        'name': 'Ayush Pandey',
+        'class': '10th',
+        'school': 'Silver Grove School',
+        'location': 'Varanasi, Uttar Pradesh',
+        'hobbies': ['Dance', 'Singing'],
+        'talent': 'Writing Stories',
+        'status': 'ok'
+    }), 200
+
+# API endpoint for all posts
+@main_bp.route('/api/posts')
+def api_posts():
+    try:
+        page = request.args.get('page', 1, type=int)
+        posts = Post.query.order_by(Post.created_at.desc()).paginate(page=page, per_page=10)
+        return jsonify({
+            'posts': [
+                {
+                    'id': p.id,
+                    'title': p.title,
+                    'content': p.content[:200],
+                    'author': p.author,
+                    'category': p.category,
+                    'created_at': p.created_at.isoformat()
+                } for p in posts.items
+            ],
+            'pages': posts.pages,
+            'current_page': page
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -64,16 +73,45 @@ def list_posts():
     try:
         page = request.args.get('page', 1, type=int)
         posts = Post.query.order_by(Post.created_at.desc()).paginate(page=page, per_page=10)
-        return render_template('blog/list.html', posts=posts)
+        return jsonify({
+            'posts': [
+                {
+                    'id': p.id,
+                    'title': p.title,
+                    'author': p.author,
+                    'category': p.category,
+                    'created_at': p.created_at.isoformat()
+                } for p in posts.items
+            ],
+            'pages': posts.pages,
+            'current_page': page
+        }), 200
     except Exception as e:
-        return jsonify({'error': str(e), 'status': 'error'}), 500
+        return jsonify({'error': str(e)}), 500
 
 @blog_bp.route('/post/<int:post_id>')
 def view_post(post_id):
     try:
         post = Post.query.get_or_404(post_id)
         comments = Comment.query.filter_by(post_id=post_id).order_by(Comment.created_at.desc()).all()
-        return render_template('blog/post.html', post=post, comments=comments)
+        return jsonify({
+            'post': {
+                'id': post.id,
+                'title': post.title,
+                'content': post.content,
+                'author': post.author,
+                'category': post.category,
+                'created_at': post.created_at.isoformat()
+            },
+            'comments': [
+                {
+                    'id': c.id,
+                    'author': c.author,
+                    'content': c.content,
+                    'created_at': c.created_at.isoformat()
+                } for c in comments
+            ]
+        }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 404
 
@@ -82,21 +120,20 @@ def add_comment(post_id):
     try:
         post = Post.query.get_or_404(post_id)
         
-        author = request.form.get('author', '')
-        email = request.form.get('email', '')
-        content = request.form.get('content', '')
+        data = request.get_json()
+        author = data.get('author', '')
+        email = data.get('email', '')
+        content = data.get('content', '')
         
         if author and email and content:
             comment = Comment(author=author, email=email, content=content, post_id=post_id)
             db.session.add(comment)
             db.session.commit()
-            flash('Comment added successfully!', 'success')
+            return jsonify({'status': 'success', 'message': 'Comment added'}), 201
         else:
-            flash('Please fill in all fields', 'error')
+            return jsonify({'error': 'Missing required fields'}), 400
     except Exception as e:
-        flash(f'Error adding comment: {str(e)}', 'error')
-    
-    return redirect(url_for('blog.view_post', post_id=post_id))
+        return jsonify({'error': str(e)}), 500
         flash('All fields are required!', 'error')
     
     return redirect(url_for('blog.view_post', post_id=post_id))
